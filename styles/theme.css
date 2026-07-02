@@ -1,0 +1,50 @@
+:root {
+  color-scheme: light;
+  --background: #f7faf7;
+  --foreground: #18231f;
+  --muted: #66756e;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: #ffffff;
+  --border: rgba(24, 35, 31, 0.14);
+  --primary: #0f766e;
+  --primary-strong: #0b5f59;
+  --accent: #f97316;
+  --accent-soft: #ffedd5;
+  --danger: #be123c;
+  --success: #15803d;
+  --warning: #ca8a04;
+  --shadow: 0 22px 70px rgba(21, 32, 28, 0.12);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #101714;
+  --foreground: #eef8f1;
+  --muted: #a9b8ae;
+  --surface: rgba(25, 36, 31, 0.78);
+  --surface-strong: #17211d;
+  --border: rgba(238, 248, 241, 0.14);
+  --primary: #2dd4bf;
+  --primary-strong: #14b8a6;
+  --accent: #fb923c;
+  --accent-soft: rgba(251, 146, 60, 0.14);
+  --danger: #fb7185;
+  --success: #4ade80;
+  --warning: #facc15;
+  --shadow: 0 22px 70px rgba(0, 0, 0, 0.32);
+}
+
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 34%, transparent);
+}
