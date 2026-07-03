@@ -4,6 +4,9 @@ import { escapeHtml, normalizeWhitespace } from "@/utils/sanitize";
 
 const FIRST_NAME_KEYS = ["first name", "firstname", "ชื่อ", "name"];
 const LAST_NAME_KEYS = ["last name", "lastname", "นามสกุล", "surname"];
+const NICKNAME_KEYS = ["nickname", "nick name", "ชื่อเล่น"];
+const PHONE_KEYS = ["phone", "โทรศัพท์", "เบอร์โทร", "เบอร์"];
+const EMAIL_KEYS = ["email", "อีเมล"];
 
 export function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
@@ -63,23 +66,37 @@ export function csvToImportRegistrants(text: string): ImportRegistrant[] {
   const headers = rows[0].map((header) => normalizeWhitespace(header).toLowerCase());
   const firstNameIndex = findHeader(headers, FIRST_NAME_KEYS);
   const lastNameIndex = findHeader(headers, LAST_NAME_KEYS);
+  const nicknameIndex = findHeader(headers, NICKNAME_KEYS);
+  const phoneIndex = findHeader(headers, PHONE_KEYS);
+  const emailIndex = findHeader(headers, EMAIL_KEYS);
 
-  if (firstNameIndex < 0 || lastNameIndex < 0) {
+  if (  firstNameIndex < 0 ||
+        lastNameIndex < 0 ||
+        nicknameIndex < 0 ||
+        phoneIndex < 0 ||
+        emailIndex < 0
+      ) {
     throw new Error("CSV ต้องมีคอลัมน์ First Name และ Last Name");
   }
 
   return rows.slice(1).map((row) => ({
     firstName: normalizeWhitespace(row[firstNameIndex] ?? ""),
     lastName: normalizeWhitespace(row[lastNameIndex] ?? ""),
+    nickname: normalizeWhitespace(row[nicknameIndex] ?? ""),
+    phone: normalizeWhitespace(row[phoneIndex] ?? ""),
+    email: normalizeWhitespace(row[emailIndex] ?? ""),
   }));
 }
 
 export function registrantsToCsv(registrants: Registrant[]): string {
-  const header = ["Timestamp", "First Name", "Last Name", "UUID", "Status", "Winner"];
+  const header = ["Timestamp", "First Name", "Last Name","Nickname","Phone","Email", "UUID", "Status", "Winner"];
   const rows = registrants.map((registrant) => [
     registrant.timestamp,
     registrant.firstName,
     registrant.lastName,
+    registrant.nickname,
+    registrant.phone,
+    registrant.email,
     registrant.uuid,
     registrant.status,
     registrant.winner ? "TRUE" : "FALSE",
