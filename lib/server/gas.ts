@@ -37,9 +37,6 @@ async function requestGas<TData>(url: string, init: RequestInit): Promise<ApiRes
   const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
   try {
-    console.log("===== GAS REQUEST =====");
-    console.log("URL:", url);
-    console.log("INIT:", init);
 
     const response = await fetch(url, {
       ...init,
@@ -47,10 +44,7 @@ async function requestGas<TData>(url: string, init: RequestInit): Promise<ApiRes
       signal: controller.signal,
     });
 
-    console.log("HTTP STATUS:", response.status);
-
     const text = await response.text();
-    console.log("BODY:", text);
 
     if (text.length === 0) {
       throw new ApiHttpError("Apps Script ส่งข้อมูลว่างกลับมา", 502);
@@ -64,7 +58,6 @@ async function requestGas<TData>(url: string, init: RequestInit): Promise<ApiRes
 
     return payload;
   } catch (error) {
-    console.error("GAS ERROR:", error);
 
     if (error instanceof ApiHttpError) {
       throw error;

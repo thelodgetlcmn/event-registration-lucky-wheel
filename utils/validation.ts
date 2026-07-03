@@ -9,6 +9,8 @@ import {
 
 const MAX_NAME_LENGTH = 60;
 const NAME_PATTERN = /^[\p{L}\p{M}\s.'-]+$/u;
+const MAX_PHONE_LENGTH = 20;
+const MAX_EMAIL_LENGTH = 120;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function nameField(label: string) {
@@ -46,9 +48,34 @@ function nameField(label: string) {
     .transform((value) => sanitizeText(value, MAX_NAME_LENGTH));
 }
 
+function phoneField() {
+  return z
+    .string()
+    .trim()
+    .min(8, "กรุณากรอกเบอร์โทร")
+    .max(MAX_PHONE_LENGTH, "เบอร์โทรยาวเกินไป")
+    .regex(/^[0-9+\-\s]+$/, "เบอร์โทรไม่ถูกต้อง");
+}
+
+function emailField() {
+  return z
+    .string()
+    .trim()
+    .email("อีเมลไม่ถูกต้อง")
+    .max(MAX_EMAIL_LENGTH, "อีเมลยาวเกินไป");
+}
+
 export const registrationSchema = z.object({
   firstName: nameField("ชื่อ"),
+
   lastName: nameField("นามสกุล"),
+
+  nickname: nameField("ชื่อเล่น"),
+
+  phone: phoneField(),
+
+  email: emailField(),
+
   clientRequestId: z
     .string()
     .regex(UUID_PATTERN, "รหัสคำขอไม่ถูกต้อง")
@@ -61,6 +88,9 @@ export const importRowsSchema = z
     z.object({
       firstName: nameField("ชื่อ"),
       lastName: nameField("นามสกุล"),
+      nickname: nameField("ชื่อเล่น"),
+      phone: phoneField(),
+      email: emailField(),
     }),
   )
   .min(1, "ต้องมีข้อมูลอย่างน้อย 1 แถว")

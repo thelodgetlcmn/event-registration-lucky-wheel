@@ -22,13 +22,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return proxyGasResponse(gasResponse);
   } catch (error) {
-    console.error("===== REGISTER ERROR =====");
-    console.error(error);
-
-    if (error instanceof Error) {
-      console.error(error.stack);
-    }
-
     return routeErrorResponse(error);
   }
 }

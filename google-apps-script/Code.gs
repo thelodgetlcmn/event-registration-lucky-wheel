@@ -1,6 +1,6 @@
 var CONFIG = Object.freeze({
   SHEET_NAME: "Registrations",
-  HEADERS: ["Timestamp", "First Name", "Last Name", "UUID", "Status", "Winner"],
+  HEADERS: ["Timestamp","First Name","Last Name","Nickname","Phone","Email","UUID","Status","Winner"],
   STATUS_AVAILABLE: "AVAILABLE",
   STATUS_WINNER: "WINNER",
   MAX_NAME_LENGTH: 60,
@@ -121,7 +121,15 @@ function resetData() {
 function register_(payload) {
   var firstName = validateName_(payload.firstName, "First Name");
   var lastName = validateName_(payload.lastName, "Last Name");
-  var requestKey = payload.clientRequestId || firstName + ":" + lastName;
+  var nickname = validateName_(payload.nickname, "Nickname");
+  var phone = validatePhone_(payload.phone);
+  var email = validateEmail_(payload.email);
+
+  var requestKey =
+    payload.clientRequestId ||
+    email ||
+    phone ||
+    firstName + ":" + lastName;
 
   enforceRateLimit_(String(requestKey));
 
@@ -131,16 +139,20 @@ function register_(payload) {
   try {
     var sheet = getSheet_();
 
-    if (isDuplicate_(sheet, firstName, lastName)) {
+    if (isDuplicate_(sheet, email)) {
       throw httpError_("Duplicate registration", 409);
     }
 
     var timestamp = new Date();
     var uuid = Utilities.getUuid();
+
     var row = [
       timestamp,
       escapeSheetFormula_(firstName),
       escapeSheetFormula_(lastName),
+      escapeSheetFormula_(nickname),
+      escapeSheetFormula_(phone),
+      escapeSheetFormula_(email),
       uuid,
       CONFIG.STATUS_AVAILABLE,
       false,
@@ -152,6 +164,9 @@ function register_(payload) {
       timestamp: timestamp.toISOString(),
       firstName: firstName,
       lastName: lastName,
+      nickname: nickname,
+      phone: phone,
+      email: email,
       uuid: uuid,
       status: CONFIG.STATUS_AVAILABLE,
       winner: false,
@@ -214,10 +229,16 @@ function importRows_(rows) {
         }
 
         existing[key] = true;
+        var nickname = validateName_(row.nickname, "Nickname");
+        var phone = validatePhone_(row.phone);
+        var email = validateEmail_(row.email);
         values.push([
           new Date(),
           escapeSheetFormula_(firstName),
           escapeSheetFormula_(lastName),
+          escapeSheetFormula_(nickname),
+          escapeSheetFormula_(phone),
+          escapeSheetFormula_(email),
           Utilities.getUuid(),
           CONFIG.STATUS_AVAILABLE,
           false,
@@ -256,8 +277,8 @@ function listWinners_() {
 }
 
 function markWinner_(sheet, rowNumber) {
-  sheet.getRange(rowNumber, 5).setValue(CONFIG.STATUS_WINNER);
-  sheet.getRange(rowNumber, 6).setValue(true);
+  sheet.getRange(rowNumber, 8).setValue(CONFIG.STATUS_WINNER);
+  sheet.getRange(rowNumber, 9).setValue(true);
   SpreadsheetApp.flush();
 
   var values = sheet.getRange(rowNumber, 1, 1, CONFIG.HEADERS.length).getValues()[0];
@@ -275,15 +296,17 @@ function findRowByUuid_(sheet, uuid) {
   return null;
 }
 
-function isDuplicate_(sheet, firstName, lastName) {
-  return Boolean(buildExistingNameMap_(sheet)[nameKey_(firstName, lastName)]);
+function isDuplicate_(sheet, email) {
+  return Boolean(buildExistingEmailMap_(sheet)[email.toLowerCase()]);
 }
 
-function buildExistingNameMap_(sheet) {
+function buildExistingEmailMap_(sheet) {
   var existing = {};
+
   getRows_(sheet).forEach(function (row) {
-    existing[nameKey_(row.record.firstName, row.record.lastName)] = true;
+    existing[row.record.email.toLowerCase()] = true;
   });
+
   return existing;
 }
 
@@ -315,9 +338,12 @@ function valuesToRegistrant_(row) {
     timestamp: toIsoString_(row[0]),
     firstName: String(row[1] || ""),
     lastName: String(row[2] || ""),
-    uuid: String(row[3] || ""),
-    status: String(row[4] || CONFIG.STATUS_AVAILABLE),
-    winner: toBoolean_(row[5]),
+    nickname: String(row[3] || ""),
+    phone: String(row[4] || ""),
+    email: String(row[5] || ""),
+    uuid: String(row[6] || ""),
+    status: String(row[7] || CONFIG.STATUS_AVAILABLE),
+    winner: toBoolean_(row[8]),
   };
 }
 
@@ -386,6 +412,26 @@ function validateName_(value, label) {
   }
 
   return normalized;
+}
+
+function validatePhone_(value) {
+  var phone = normalize_(value);
+
+  if (!/^0\d{8,9}$/.test(phone)) {
+    throw httpError_("Invalid phone number", 422);
+  }
+
+  return phone;
+}
+
+function validateEmail_(value) {
+  var email = normalize_(value).toLowerCase();
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw httpError_("Invalid email", 422);
+  }
+
+  return email;
 }
 
 function normalize_(value) {

@@ -6,9 +6,6 @@ export interface ServerEnv {
 }
 
 export function requireServerEnv(): ServerEnv {
-  console.log("GOOGLE_APPS_SCRIPT_URL =", process.env.GOOGLE_APPS_SCRIPT_URL);
-  console.log("APPS_SCRIPT_SHARED_SECRET =", process.env.APPS_SCRIPT_SHARED_SECRET);
-
   const googleAppsScriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
   const appsScriptSharedSecret = process.env.APPS_SCRIPT_SHARED_SECRET;
 
@@ -19,6 +16,7 @@ export function requireServerEnv(): ServerEnv {
   if (!appsScriptSharedSecret || appsScriptSharedSecret.length < 16) {
     throw new ApiHttpError("ยังไม่ได้ตั้งค่า APPS_SCRIPT_SHARED_SECRET ให้ปลอดภัย", 500);
   }
+
 
   return {
     googleAppsScriptUrl,
