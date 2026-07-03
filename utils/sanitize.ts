@@ -1,13 +1,17 @@
-import DOMPurify from "isomorphic-dompurify";
-
 const SQL_LIKE_PATTERN =
   /(--|;|\/\*|\*\/|\b(select|insert|update|delete|drop|alter|truncate|union|exec)\b)/i;
+
 const CONTROL_CHAR_PATTERN = /[\u0000-\u001f\u007f]/g;
+
 const HTML_MARKER_PATTERN = /[<>]/;
+
 const SHEET_FORMULA_PATTERN = /^[=+\-@\t\r]/;
 
 export function normalizeWhitespace(value: string): string {
-  return value.replace(CONTROL_CHAR_PATTERN, "").replace(/\s+/g, " ").trim();
+  return value
+    .replace(CONTROL_CHAR_PATTERN, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function escapeHtml(value: string): string {
@@ -20,11 +24,7 @@ export function escapeHtml(value: string): string {
 }
 
 export function sanitizeText(value: string, maxLength: number): string {
-  const normalized = normalizeWhitespace(value).slice(0, maxLength);
-  return DOMPurify.sanitize(normalized, {
-    ALLOWED_ATTR: [],
-    ALLOWED_TAGS: [],
-  });
+  return normalizeWhitespace(value).slice(0, maxLength);
 }
 
 export function containsHtml(value: string): boolean {
