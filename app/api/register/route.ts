@@ -12,30 +12,30 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
-    console.log("STEP 1");
+    console.log("1");
 
     await assertCsrf(request);
 
-    console.log("STEP 2");
+    console.log("2");
 
     const body = await readJsonBody(request);
 
-    console.log("STEP 3", body);
+    console.log("3");
 
     const input = registrationSchema.parse(body);
 
-    console.log("STEP 4");
+    console.log("4");
 
-    const gasResponse = await gasPost<Registrant>({
+    const gasResponse = await gasPost({
       action: "register",
       ...input,
     });
 
-    console.log("STEP 5");
+    console.log("5");
 
     return proxyGasResponse(gasResponse);
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
+    console.error(error);
     return routeErrorResponse(error);
   }
 }
