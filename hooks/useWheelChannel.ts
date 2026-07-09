@@ -8,6 +8,7 @@ const CHANNEL_NAME = "lucky-wheel-sync";
 
 export type WheelSyncMessage =
   | { type: "spin"; spinKey: number; targetUuid: string; participants: Registrant[] }
+  | { type: "close-celebration" }
   | { type: "reset" };
 
 export function useWheelChannel(onMessage?: (message: WheelSyncMessage) => void) {

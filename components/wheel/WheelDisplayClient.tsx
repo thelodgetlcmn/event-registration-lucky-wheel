@@ -19,16 +19,20 @@ export function WheelDisplayClient() {
   const [spinKey, setSpinKey] = useState(0);
   const [celebrateWinner, setCelebrateWinner] = useState<Registrant | null>(null);
 
-  useWheelChannel(
-    useCallback((message) => {
-      if (message.type === "spin") {
-        setSpinParticipants(message.participants);
-        setTargetUuid(message.targetUuid);
-        setSpinKey(message.spinKey);
-        setIsSpinning(true);
-      }
-    }, []),
-  );
+    useWheelChannel(
+        useCallback((message) => {
+            if (message.type === "spin") {
+            setSpinParticipants(message.participants);
+            setTargetUuid(message.targetUuid);
+            setSpinKey(message.spinKey);
+            setIsSpinning(true);
+            }
+
+            if (message.type === "close-celebration") {
+            setCelebrateWinner(null);
+            }
+        }, []),
+    );
 
   const fallbackParticipants = registrants.filter(
     (registrant) => registrant.status === "AVAILABLE" && !registrant.winner,

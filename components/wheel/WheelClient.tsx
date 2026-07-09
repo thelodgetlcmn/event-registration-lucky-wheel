@@ -42,6 +42,11 @@ export function WheelClient() {
     window.open("/wheel-display", "_blank", "noopener,noreferrer");
   }
 
+  function handleCloseCelebration() {
+    setCelebrateWinner(null);
+    postMessage({ type: "close-celebration" });
+  }
+
   async function handleDrawWinner() {
     if (isSpinning || isClaiming || availableParticipants.length === 0) {
       return;
@@ -193,7 +198,8 @@ export function WheelClient() {
           </div>
         </aside>
       </section>
-       <WinnerModal onClose={() => setCelebrateWinner(null)} winner={celebrateWinner} />
+
+      <WinnerModal onClose={handleCloseCelebration} winner={celebrateWinner} />
     </div>
   );
 }
