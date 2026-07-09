@@ -1,12 +1,13 @@
 "use client";
 
-import { Gift, RefreshCw, Sparkles, Trophy } from "lucide-react";
+import { ExternalLink, Gift, RefreshCw, Sparkles, Trophy } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
 import { LuckyWheelCanvas } from "@/components/wheel/LuckyWheelCanvas";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useRegistrants } from "@/hooks/useRegistrants";
+import { useWheelChannel } from "@/hooks/useWheelChannel";
 import { toastFromError, useToast } from "@/hooks/useToast";
 import { drawWinner } from "@/services/wheel";
 import type { Registrant } from "@/types/registration";
@@ -21,6 +22,7 @@ export function WheelClient() {
   const [isClaiming, setIsClaiming] = useState(false);
   const [spinKey, setSpinKey] = useState(0);
   const showToast = useToast((state) => state.showToast);
+  const { postMessage } = useWheelChannel();
 
   const availableParticipants = useMemo(() => {
     return registrants.filter(
@@ -33,6 +35,10 @@ export function WheelClient() {
 
   const wheelParticipants =
     isSpinning && spinParticipants ? spinParticipants : availableParticipants;
+
+  function handleOpenDisplay() {
+    window.open("/admin/wheel/display", "_blank", "noopener,noreferrer");
+  }
 
   async function handleDrawWinner() {
     if (isSpinning || isClaiming || availableParticipants.length === 0) {
@@ -48,10 +54,20 @@ export function WheelClient() {
         ? availableParticipants
         : [winner, ...availableParticipants];
 
+      const nextSpinKey = spinKey + 1;
+
       setSpinParticipants(participantsForSpin);
       setTargetWinner(winner);
       setIsSpinning(true);
-      setSpinKey((current) => current + 1);
+      setSpinKey(nextSpinKey);
+
+      // แจ้งให้ tab อื่น (หน้าจอแสดงผล) หมุนพร้อมกัน
+      postMessage({
+        type: "spin",
+        spinKey: nextSpinKey,
+        targetUuid: winner.uuid,
+        participants: participantsForSpin,
+      });
     } catch (caught) {
       showToast(toastFromError(caught, "สุ่มผู้ชนะไม่สำเร็จ"));
       await refresh();
@@ -84,14 +100,23 @@ export function WheelClient() {
           <p className="text-sm font-bold text-[var(--primary)]">Admin</p>
           <h1 className="text-3xl font-black">Lucky Wheel</h1>
         </div>
-        <Button
-          icon={<RefreshCw aria-hidden="true" className="h-4 w-4" />}
-          isLoading={isLoading}
-          onClick={() => void refresh()}
-          variant="secondary"
-        >
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            icon={<ExternalLink aria-hidden="true" className="h-4 w-4" />}
+            onClick={handleOpenDisplay}
+            variant="secondary"
+          >
+            เปิดหน้าจอแสดงผล
+          </Button>
+          <Button
+            icon={<RefreshCw aria-hidden="true" className="h-4 w-4" />}
+            isLoading={isLoading}
+            onClick={() => void refresh()}
+            variant="secondary"
+          >
+            Refresh
+          </Button>
+        </div>
       </header>
 
       {error ? (
