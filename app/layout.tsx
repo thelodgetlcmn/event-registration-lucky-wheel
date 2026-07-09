@@ -5,8 +5,8 @@ import "@/app/globals.css";
 import { ToastViewport } from "@/components/ui/ToastViewport";
 
 export const metadata: Metadata = {
-  title: "Event Registration + Lucky Wheel",
-  description: "Registration, admin dashboard, and lucky wheel backed by Google Sheets.",
+  title: "Lucky Wheel Arobic TLCMN",
+  description: "Lucky Wheel Arobic TLCMN",
 };
 
 interface RootLayoutProps {
