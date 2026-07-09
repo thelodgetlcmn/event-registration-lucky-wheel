@@ -37,7 +37,7 @@ export function WheelClient() {
     isSpinning && spinParticipants ? spinParticipants : availableParticipants;
 
   function handleOpenDisplay() {
-    window.open("/admin/wheel/display", "_blank", "noopener,noreferrer");
+    window.open("/wheel-display", "_blank", "noopener,noreferrer");
   }
 
   async function handleDrawWinner() {

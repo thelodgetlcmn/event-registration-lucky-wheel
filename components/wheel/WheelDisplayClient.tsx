@@ -47,13 +47,8 @@ export function WheelDisplayClient() {
   );
 
   return (
-    <div className="grid gap-5">
-      <header>
-        <p className="text-sm font-bold text-[var(--primary)]">Display</p>
-        <h1 className="text-3xl font-black">Lucky Wheel</h1>
-      </header>
-
-      <section className="grid gap-5 xl:grid-cols-[1fr_21rem]">
+    <div className="grid min-h-screen place-items-center gap-5 p-4 sm:p-6">
+      <section className="grid w-full max-w-6xl gap-5 xl:grid-cols-[1fr_21rem]">
         <div className="glass-panel rounded-lg p-4 sm:p-5">
           {isLoading ? (
             <Skeleton className="h-[28rem] w-full" />
@@ -69,10 +64,7 @@ export function WheelDisplayClient() {
 
         <aside className="glass-panel rounded-lg p-4">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold text-[var(--primary)]">Sidebar</p>
-              <h2 className="text-xl font-black">Session Winners</h2>
-            </div>
+            <h2 className="text-xl font-black">Winners</h2>
             <Trophy aria-hidden="true" className="h-6 w-6 text-[var(--accent)]" />
           </div>
 
