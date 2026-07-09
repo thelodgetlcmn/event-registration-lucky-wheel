@@ -183,7 +183,6 @@ export function WheelClient() {
                     <p className="font-bold">
                       {winner.firstName} {winner.lastName}
                     </p>
-                    <p className="mt-1 font-mono text-xs text-[var(--muted)]">{winner.uuid}</p>
                   </div>
                   <span className="text-sm font-black text-[var(--accent)]">#{index + 1}</span>
                 </div>

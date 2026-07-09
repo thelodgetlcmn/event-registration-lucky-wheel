@@ -60,7 +60,6 @@ export function WinnerModal({ onClose, winner }: WinnerModalProps) {
         <h2 className="mt-2 text-3xl font-black">
           {winner.firstName} {winner.lastName}
         </h2>
-        <p className="mt-2 font-mono text-xs text-[var(--muted)]">{winner.uuid}</p>
 
         <button
           className="mt-6 w-full rounded-lg bg-[var(--primary)] px-4 py-2.5 text-sm font-bold text-[var(--primary-foreground)] transition hover:opacity-90"
