@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 
 import { LuckyWheelCanvas } from "@/components/wheel/LuckyWheelCanvas";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { WinnerModal } from "@/components/wheel/WinnerModal";
 import { useRegistrants } from "@/hooks/useRegistrants";
 import { useWheelChannel } from "@/hooks/useWheelChannel";
 import type { Registrant } from "@/types/registration";
@@ -16,6 +17,7 @@ export function WheelDisplayClient() {
   const [sessionWinners, setSessionWinners] = useState<Registrant[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinKey, setSpinKey] = useState(0);
+  const [celebrateWinner, setCelebrateWinner] = useState<Registrant | null>(null);
 
   useWheelChannel(
     useCallback((message) => {
@@ -41,6 +43,7 @@ export function WheelDisplayClient() {
       setTargetUuid(null);
       setSpinParticipants(null);
       setIsSpinning(false);
+      setCelebrateWinner(winner);
       void refresh();
     },
     [refresh],
@@ -94,6 +97,8 @@ export function WheelDisplayClient() {
           </div>
         </aside>
       </section>
+
+      <WinnerModal onClose={() => setCelebrateWinner(null)} winner={celebrateWinner} />
     </div>
   );
 }

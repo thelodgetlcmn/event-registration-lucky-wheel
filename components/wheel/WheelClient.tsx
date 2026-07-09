@@ -11,6 +11,7 @@ import { useWheelChannel } from "@/hooks/useWheelChannel";
 import { toastFromError, useToast } from "@/hooks/useToast";
 import { drawWinner } from "@/services/wheel";
 import type { Registrant } from "@/types/registration";
+import { WinnerModal } from "@/components/wheel/WinnerModal";
 
 export function WheelClient() {
   const { counts, error, isLoading, refresh, registrants } = useRegistrants();
@@ -23,6 +24,7 @@ export function WheelClient() {
   const [spinKey, setSpinKey] = useState(0);
   const showToast = useToast((state) => state.showToast);
   const { postMessage } = useWheelChannel();
+  const [celebrateWinner, setCelebrateWinner] = useState<Registrant | null>(null);
 
   const availableParticipants = useMemo(() => {
     return registrants.filter(
@@ -83,6 +85,7 @@ export function WheelClient() {
       setTargetWinner(null);
       setSpinParticipants(null);
       setIsSpinning(false);
+      setCelebrateWinner(winner);
       showToast({
         title: "ผู้ชนะ",
         description: `${winner.firstName} ${winner.lastName}`,
@@ -190,6 +193,7 @@ export function WheelClient() {
           </div>
         </aside>
       </section>
+       <WinnerModal onClose={() => setCelebrateWinner(null)} winner={celebrateWinner} />
     </div>
   );
 }
