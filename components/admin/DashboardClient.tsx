@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Download,
   FileSpreadsheet,
+  Maximize,
   RefreshCw,
   Search,
   Trash2,
@@ -109,6 +110,27 @@ export function DashboardClient() {
     }
   }
 
+  function handleOpenDisplay() {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    // เปิดหน้าต่างใหม่ให้มีขนาดเท่าจอ (ถ้าต่อจอที่ 2 แบบ extend จะเปิดชิดขวาของจอหลัก
+    // ทำให้ลากไปวางที่จอ 2 ได้ง่าย) แล้วพยายามสั่งเต็มจอให้อัตโนมัติ
+    const width = window.screen.availWidth;
+    const height = window.screen.availHeight;
+    const left = window.screen.width;
+    const features = `left=${left},top=0,width=${width},height=${height},menubar=no,toolbar=no,location=no,status=no`;
+
+    const displayWindow = window.open(
+      "/wheel-display?fullscreen=1",
+      "lucky-wheel-display",
+      features,
+    );
+
+    displayWindow?.focus();
+  }
+
   async function handleReset() {
     setIsResetting(true);
     try {
@@ -133,14 +155,23 @@ export function DashboardClient() {
           <p className="text-sm font-bold text-[var(--primary)]">Admin</p>
           <h1 className="text-3xl font-black">Dashboard</h1>
         </div>
-        <Button
-          icon={<RefreshCw aria-hidden="true" className="h-4 w-4" />}
-          isLoading={isLoading}
-          onClick={() => void refresh()}
-          variant="secondary"
-        >
-          Refresh Data
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            icon={<Maximize aria-hidden="true" className="h-4 w-4" />}
+            onClick={handleOpenDisplay}
+            variant="secondary"
+          >
+            เปิดวงล้อจอที่ 2 (เต็มจอ)
+          </Button>
+          <Button
+            icon={<RefreshCw aria-hidden="true" className="h-4 w-4" />}
+            isLoading={isLoading}
+            onClick={() => void refresh()}
+            variant="secondary"
+          >
+            Refresh Data
+          </Button>
+        </div>
       </header>
 
       <StatsCards counts={counts} />

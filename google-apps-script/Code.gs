@@ -9,6 +9,9 @@ var CONFIG = Object.freeze({
   RATE_LIMIT_MAX_REQUESTS: 5,
 });
 
+// เช็ค header แค่ครั้งเดียวต่อ execution (reset ทุก request อยู่แล้วเพราะ Apps Script เป็น stateless)
+var _headersChecked = false;
+
 function doGet(e) {
   return handleJson_(function () {
     var params = (e && e.parameter) || {};
@@ -79,7 +82,9 @@ function removeWinner(uuid) {
   }
 
   var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+  if (!lock.tryLock(3000)) {
+    throw httpError_("Server busy", 503);
+  }
 
   try {
     var sheet = getSheet_();
@@ -93,7 +98,7 @@ function removeWinner(uuid) {
       throw httpError_("Registrant is already a winner", 409);
     }
 
-    return markWinner_(sheet, row.rowNumber);
+    return markWinner_(sheet, row.rowNumber, row.record);
   } finally {
     lock.releaseLock();
   }
@@ -101,7 +106,9 @@ function removeWinner(uuid) {
 
 function resetData() {
   var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+  if (!lock.tryLock(3000)) {
+    throw httpError_("Server busy", 503);
+  }
 
   try {
     var sheet = getSheet_();
@@ -134,12 +141,22 @@ function register_(payload) {
   enforceRateLimit_(String(requestKey));
 
   var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+  if (!lock.tryLock(3000)) {
+    throw httpError_("Server busy", 503);
+  }
 
   try {
     var sheet = getSheet_();
 
-    if (isDuplicate_(sheet, email)) {
+    // อ่าน rows ครั้งเดียว ใช้เช็ค duplicate แทนการเรียก isDuplicate_ ที่ทำให้เกิด getRows_ ซ้ำ
+    var existingRows = getRows_(sheet);
+    var duplicate =
+      email.length > 0 &&
+      existingRows.some(function (row) {
+        return row.record.email.toLowerCase() === email;
+      });
+
+    if (duplicate) {
       throw httpError_("Duplicate registration", 409);
     }
 
@@ -178,7 +195,9 @@ function register_(payload) {
 
 function drawWinner_() {
   var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+  if (!lock.tryLock(3000)) {
+    throw httpError_("Server busy", 503);
+  }
 
   try {
     var sheet = getSheet_();
@@ -192,7 +211,7 @@ function drawWinner_() {
     }
 
     var selected = availableRows[Math.floor(Math.random() * availableRows.length)];
-    return markWinner_(sheet, selected.rowNumber);
+    return markWinner_(sheet, selected.rowNumber, selected.record);
   } finally {
     lock.releaseLock();
   }
@@ -208,7 +227,9 @@ function importRows_(rows) {
   }
 
   var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+  if (!lock.tryLock(3000)) {
+    throw httpError_("Server busy", 503);
+  }
 
   try {
     var sheet = getSheet_();
@@ -276,13 +297,15 @@ function listWinners_() {
   });
 }
 
-function markWinner_(sheet, rowNumber) {
-  sheet.getRange(rowNumber, 8).setValue(CONFIG.STATUS_WINNER);
-  sheet.getRange(rowNumber, 9).setValue(true);
-  SpreadsheetApp.flush();
+// เขียน status+winner ในการเรียกเดียว (setValues บน range 2 คอลัมน์) แทนการ setValue 2 ครั้ง
+// และคืนค่าจาก record ที่มีอยู่แล้วแทนการอ่านย้อนกลับจากชีต (ตัด flush + read ทิ้งไปทั้งคู่)
+function markWinner_(sheet, rowNumber, existingRecord) {
+  sheet.getRange(rowNumber, 8, 1, 2).setValues([[CONFIG.STATUS_WINNER, true]]);
 
-  var values = sheet.getRange(rowNumber, 1, 1, CONFIG.HEADERS.length).getValues()[0];
-  return valuesToRegistrant_(values);
+  return Object.assign({}, existingRecord, {
+    status: CONFIG.STATUS_WINNER,
+    winner: true,
+  });
 }
 
 function findRowByUuid_(sheet, uuid) {
@@ -296,15 +319,21 @@ function findRowByUuid_(sheet, uuid) {
   return null;
 }
 
-function isDuplicate_(sheet, email) {
-  return Boolean(buildExistingEmailMap_(sheet)[email.toLowerCase()]);
-}
-
 function buildExistingEmailMap_(sheet) {
   var existing = {};
 
   getRows_(sheet).forEach(function (row) {
     existing[row.record.email.toLowerCase()] = true;
+  });
+
+  return existing;
+}
+
+function buildExistingNameMap_(sheet) {
+  var existing = {};
+
+  getRows_(sheet).forEach(function (row) {
+    existing[nameKey_(row.record.firstName, row.record.lastName)] = true;
   });
 
   return existing;
@@ -365,6 +394,11 @@ function getSheet_() {
 }
 
 function ensureHeaders_(sheet) {
+  if (_headersChecked) {
+    return;
+  }
+  _headersChecked = true;
+
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(CONFIG.HEADERS);
     sheet.setFrozenRows(1);
@@ -426,6 +460,10 @@ function validatePhone_(value) {
 
 function validateEmail_(value) {
   var email = normalize_(value).toLowerCase();
+
+  if (email.length === 0) {
+    return "";
+  }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw httpError_("Invalid email", 422);

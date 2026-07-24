@@ -79,13 +79,26 @@ function phoneField() {
     });
 }
 
-/* ---------------- EMAIL ---------------- */
+/* ---------------- EMAIL (ไม่บังคับ) ---------------- */
 function emailField() {
   return z
     .string()
-    .email("อีเมลไม่ถูกต้อง")
-    .max(MAX_EMAIL_LENGTH, "อีเมลยาวเกินไป")
-    .transform((v) => normalizeWhitespace(v).toLowerCase());
+    .optional()
+    .default("")
+    .transform((v) => normalizeWhitespace(v ?? "").toLowerCase())
+    .superRefine((value, ctx) => {
+      if (!value) {
+        return;
+      }
+
+      if (value.length > MAX_EMAIL_LENGTH) {
+        ctx.addIssue({ code: "custom", message: "อีเมลยาวเกินไป" });
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        ctx.addIssue({ code: "custom", message: "อีเมลไม่ถูกต้อง" });
+      }
+    });
 }
 
 /* ---------------- SCHEMA ---------------- */

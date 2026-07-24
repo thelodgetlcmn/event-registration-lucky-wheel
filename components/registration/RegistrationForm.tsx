@@ -25,9 +25,8 @@ export function RegistrationForm() {
       firstName.trim() &&
       lastName.trim() &&
       nickname.trim() &&
-      phone.trim() &&
-      email.trim(),
-    [firstName, lastName, nickname, phone, email],
+      phone.trim(),
+    [firstName, lastName, nickname, phone],
   );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -109,12 +108,11 @@ export function RegistrationForm() {
         />
 
         <TextField
-          label="Email"
+          label="Email (ไม่บังคับ)"
           name="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
         />
 
       </div>
